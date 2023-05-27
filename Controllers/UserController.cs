@@ -81,13 +81,13 @@ namespace Task4.Api.Controllers
                     else
                     {
                         // User is not active
-                        ModelState.AddModelError(string.Empty, "Your account is inactive. Please contact the administrator.");
+                        return BadRequest("Your account is inactive. Please contact the administrator.");
                     }
                 }
                 else
                 {
                     // Authentication failed
-                    ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                    return BadRequest("Invalid email or password.");
                 }
             }
 
