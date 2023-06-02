@@ -37,23 +37,16 @@ namespace Task4.Api.Controllers
 
                 if (result.Succeeded)
                 {
-                    // Optionally, you can sign in the user after registration
-                    // await _signInManager.SignInAsync(user, isPersistent: false);
-
-                    // Return a successful registration response
                     return Ok("Registration successful");
                 }
                 else
                 {
-                    // If registration fails, add the errors to the model state
                     foreach (var error in result.Errors)
                     {
                         ModelState.AddModelError("", error.Description);
                     }
                 }
             }
-
-            // Return the model state with validation errors
             return BadRequest(ModelState);
         }
 
@@ -68,30 +61,21 @@ namespace Task4.Api.Controllers
                 {
                     if (user.IsActive)
                     {
-                        // Update last login date
                         user.LastLoginDate = DateTime.UtcNow;
                         await _userManager.UpdateAsync(user);
 
-                        // Authentication successful
-
-                        // Generate and return authentication token or perform other actions
-
-                        return Ok();
+                        return Ok(user.Id);
                     }
                     else
                     {
-                        // User is not active
                         return BadRequest("Your account is inactive. Please contact the administrator.");
                     }
                 }
                 else
                 {
-                    // Authentication failed
                     return BadRequest("Invalid email or password.");
                 }
             }
-
-            // Invalid model state
             return BadRequest(ModelState);
         }
 
@@ -111,22 +95,6 @@ namespace Task4.Api.Controllers
             }).ToList();
 
             return Ok(userViewModels);
-        }
-
-        [HttpPut("block/{userId}")]
-        public async Task<IActionResult> BlockUser(string userId)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-
-            if (user == null)
-            {
-                return NotFound(); // User not found
-            }
-
-            user.IsActive = false;
-            await _userManager.UpdateAsync(user);
-
-            return Ok(); // User blocked successfully
         }
 
         [HttpPut("bulk-block")]
@@ -157,21 +125,26 @@ namespace Task4.Api.Controllers
             return Ok();
         }
 
-        [HttpPut("activate/{userId}")]
-        public async Task<IActionResult> ActivateUser(string userId)
+        [HttpDelete("bulk-delete")]
+        public async Task<IActionResult> BulkDeleteUsers(List<string> userIds)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-
-            if (user == null)
+            try
             {
-                return NotFound();
+                var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+
+                foreach (var user in users)
+                {
+                    await _userManager.DeleteAsync(user);
+                }
+
+                return Ok();
             }
-
-            user.IsActive = true;
-            await _userManager.UpdateAsync(user);
-
-            return Ok();
+            catch (Exception ex)
+            {
+                return BadRequest("Error deleting users: " + ex.Message);
+            }
         }
+
 
 
 
